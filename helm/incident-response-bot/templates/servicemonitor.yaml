@@ -1,0 +1,16 @@
+{{- if .Values.monitoring.prometheus.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "incident-response-bot.fullname" . }}
+  labels:
+    {{- include "incident-response-bot.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "incident-response-bot.selectorLabels" . | nindent 6 }}
+  endpoints:
+  - port: http
+    path: {{ .Values.monitoring.prometheus.serviceMonitor.path }}
+    interval: {{ .Values.monitoring.prometheus.serviceMonitor.interval }}
+{{- end }}

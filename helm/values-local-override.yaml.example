@@ -1,0 +1,10 @@
+# Local values override file - DO NOT COMMIT TO GIT
+# Copy this file and rename to values-local-override.yaml
+# Add your actual Slack tokens here
+
+slack:
+  botToken: "your-slack-bot-token-starting-with-xoxb"
+  signingSecret: "your-32-character-signing-secret"
+  appToken: "your-slack-app-token-starting-with-xapp"
+
+# This file should be added to .gitignore to prevent accidental commits

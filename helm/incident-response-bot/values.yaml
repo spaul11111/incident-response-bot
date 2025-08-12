@@ -1,0 +1,161 @@
+# Default values for incident-response-bot
+replicaCount: 1
+
+image:
+  repository: incident-response-bot
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Bot Configuration
+bot:
+  name: "Incident Response Bot"
+  defaultChannel: "#incidents"
+  logLevel: "info"
+  
+# Slack Configuration (will be stored as secrets)
+slack:
+  # These should be provided via values override or CI/CD
+  botToken: ""  # xoxb-...
+  signingSecret: ""  # from Slack app
+  appToken: ""  # xapp-... (if using Socket Mode)
+
+# Database Configuration
+database:
+  # Use external PostgreSQL (via dependency) or SQLite
+  type: "postgresql"  # or "sqlite"
+  host: ""  # Will be set automatically if using postgresql dependency
+  port: 5432
+  name: "incident_response"
+  username: "postgres"
+  password: ""  # Will be generated if using postgresql dependency
+
+# Service Configuration
+service:
+  type: ClusterIP
+  port: 3000
+  targetPort: 3000
+  annotations: {}
+
+# Ingress Configuration
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: incident-bot.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Autoscaling
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Pod Security Context
+podSecurityContext:
+  fsGroup: 2000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Container Security Context
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Node selection
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Persistence for SQLite (if used)
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 1Gi
+  annotations: {}
+
+# ServiceAccount
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Pod annotations
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "3000"
+  prometheus.io/path: "/metrics"
+
+# Monitoring Configuration
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 30s
+      path: /metrics
+  grafana:
+    enabled: true
+    dashboards:
+      enabled: true
+
+# Health Checks
+healthcheck:
+  enabled: true
+  path: /health
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# PostgreSQL (Bitnami Chart) Configuration
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "incident-response-password"
+    username: "incident_user"
+    password: "incident-password"
+    database: "incident_response"
+  primary:
+    persistence:
+      enabled: true
+      size: 2Gi
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 100m
+      limits:
+        memory: 512Mi
+        cpu: 500m
+
+# Environment Variables (non-sensitive)
+env:
+  NODE_ENV: "production"
+  PORT: "3000"
+  PROMETHEUS_PORT: "9090"
+  PROMETHEUS_HOST: "prometheus-server"
