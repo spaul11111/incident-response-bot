@@ -1,0 +1,75 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build application
+      run: npm run build
+    
+    - name: Run tests
+      run: npm test
+    
+    - name: Run linter
+      run: npm run lint || true
+    
+    - name: Check TypeScript
+      run: npx tsc --noEmit
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build Docker image
+      run: docker build -t incident-response-bot:latest .
+    
+    - name: Test Docker image
+      run: |
+        docker run --rm -d --name test-bot \
+          -e SLACK_BOT_TOKEN=test \
+          -e SLACK_SIGNING_SECRET=test \
+          incident-response-bot:latest
+        sleep 10
+        docker logs test-bot
+        docker stop test-bot
+
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run security audit
+      run: npm audit --audit-level high
+    
+    - name: Check for vulnerabilities
+      run: npm audit fix --dry-run

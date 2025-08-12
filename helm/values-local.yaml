@@ -1,0 +1,65 @@
+# Values file for deploying to the 'bot' namespace in minikube
+# Override the default values for local development
+
+# Use local Docker image
+image:
+  repository: incident-response-bot
+  tag: "latest"
+  pullPolicy: Never  # Use local image in minikube
+
+# Bot configuration for local testing
+bot:
+  name: "Incident Response Bot (Local)"
+  defaultChannel: "#incidents"
+  logLevel: "debug"
+
+# Slack credentials (replace with your actual tokens)
+slack:
+  botToken: "xoxb-your-bot-token-here"
+  signingSecret: "your-signing-secret-here"
+  appToken: "xapp-your-app-token-here"
+
+# Use SQLite for initial testing (no dependencies)
+postgresql:
+  enabled: false
+
+# Disable monitoring dependencies for now
+monitoring:
+  enabled: false
+  prometheus:
+    enabled: false
+    serviceMonitor:
+      enabled: false
+  grafana:
+    enabled: false
+
+# Resource limits for minikube
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+# Enable ingress for local access
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: incident-bot.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+# Health checks
+healthcheck:
+  enabled: true
+  initialDelaySeconds: 15
+  periodSeconds: 10
+
+# Environment for local development
+env:
+  NODE_ENV: "development"

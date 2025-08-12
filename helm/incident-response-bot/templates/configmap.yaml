@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "incident-response-bot.fullname" . }}-config
+  labels:
+    {{- include "incident-response-bot.labels" . | nindent 4 }}
+data:
+  NODE_ENV: {{ .Values.env.NODE_ENV | quote }}
+  PORT: {{ .Values.env.PORT | quote }}
+  BOT_NAME: {{ .Values.bot.name | quote }}
+  DEFAULT_INCIDENT_CHANNEL: {{ .Values.bot.defaultChannel | quote }}
+  PROMETHEUS_PORT: {{ .Values.env.PROMETHEUS_PORT | quote }}
+  PROMETHEUS_HOST: {{ .Values.env.PROMETHEUS_HOST | quote }}
+  {{- if not .Values.postgresql.enabled }}
+  DATABASE_PATH: "/app/data/incidents.db"
+  {{- else }}
+  DATABASE_HOST: {{ printf "%s-postgresql" .Release.Name | quote }}
+  DATABASE_PORT: {{ .Values.database.port | quote }}
+  DATABASE_NAME: {{ .Values.postgresql.auth.database | quote }}
+  DATABASE_USERNAME: {{ .Values.postgresql.auth.username | quote }}
+  {{- end }}
